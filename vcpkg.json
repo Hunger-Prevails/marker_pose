@@ -1,5 +1,5 @@
 {
-    "name": "visual-odometry",
+    "name": "marker-pose",
     "version-string": "1.0.0",
     "dependencies": [
         "cxxopts",
@@ -14,7 +14,9 @@
                 "jpeg",
                 "png",
                 "tiff",
-                "calib3d"
+                "calib3d",
+                "highgui",
+                "win32ui"
             ]
         },
         {
