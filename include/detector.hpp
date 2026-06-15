@@ -9,8 +9,12 @@
 using namespace cv;
 
 class Detector {
+
+protected:
+    int marker_side_;
+
 public:
-    Detector() = default;
+    Detector(int marker_side);
     virtual ~Detector() = default;
 
     void detect(cv::Mat& image);
