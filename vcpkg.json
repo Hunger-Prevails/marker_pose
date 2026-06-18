@@ -14,9 +14,7 @@
                 "jpeg",
                 "png",
                 "tiff",
-                "calib3d",
-                "highgui",
-                "win32ui"
+                "calib3d"
             ]
         },
         {

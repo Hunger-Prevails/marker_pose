@@ -4,7 +4,6 @@
 
 # include <opencv2/imgcodecs.hpp>
 # include <opencv2/opencv.hpp>
-# include <opencv2/highgui.hpp>
 # include <opencv2/calib3d.hpp>
 # include <opencv2/objdetect/aruco_detector.hpp>
 
@@ -16,11 +15,12 @@ int main(int argc, char *argv[]) {
     cxxopts::Options options("marker-pose", "options to configure marker pose estimation pipeline");
 
     options.add_options()("image", "Path to the image to process", cxxopts::value<fs::path>());
+    options.add_options()("write-path", "Path to write outputs to", cxxopts::value<fs::path>()->default_value("outputs"));
     options.add_options()("marker-side", "Length of the marker's side in meters", cxxopts::value<float>()->default_value("10.0"));
 
     auto args = options.parse(argc, argv);
 
-    auto detector = std::make_unique<Detector>(args["marker-side"].as<float>());
+    auto detector = std::make_unique<Detector>(args["write-path"].as<fs::path>(), args["marker-side"].as<float>());
 
     auto image_path = args["image"].as<fs::path>();
 
@@ -39,9 +39,6 @@ int main(int argc, char *argv[]) {
     }
 
     detector->detect(image);
-
-    cv::imshow("Marker Pose Estimation", image);
-    cv::waitKey(0);
 
     return 0;
 }

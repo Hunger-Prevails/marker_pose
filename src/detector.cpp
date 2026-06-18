@@ -11,11 +11,12 @@
 # include "detector.hpp"
 
 using namespace cv;
+namespace fs = std::filesystem;
 namespace aruco = cv::aruco;
 
-Detector::Detector(int marker_side): marker_side_(marker_side) {}
+Detector::Detector(const fs::path& write_path, const float marker_side): write_path_(write_path), marker_side_(marker_side) {}
 
-void Detector::detect(cv::Mat& image) {
+void Detector::detect(cv::Mat& image) const {
     auto width = image.cols;
     auto height = image.rows;
 

@@ -7,15 +7,18 @@
 # include <opencv2/opencv.hpp>
 
 using namespace cv;
+namespace fs = std::filesystem;
+
 
 class Detector {
 
 protected:
-    int marker_side_;
+    fs::path write_path_;
+    float marker_side_;
 
 public:
-    Detector(int marker_side);
+    Detector(const fs::path& write_path, const float marker_side);
     virtual ~Detector() = default;
 
-    void detect(cv::Mat& image);
+    void detect(cv::Mat& image) const;
 };
