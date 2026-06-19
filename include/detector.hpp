@@ -20,5 +20,5 @@ public:
     Detector(const fs::path& write_path, const float marker_side);
     virtual ~Detector() = default;
 
-    void detect(cv::Mat& image) const;
+    void detect(cv::Mat& image, const Eigen::Matrix3d& intrinsics) const;
 };

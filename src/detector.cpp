@@ -6,6 +6,7 @@
 # include <Eigen/Core>
 # include <opencv2/opencv.hpp>
 # include <opencv2/calib3d.hpp>
+# include <opencv2/core/eigen.hpp>
 # include <opencv2/objdetect/aruco_detector.hpp>
 
 # include "detector.hpp"
@@ -16,18 +17,9 @@ namespace aruco = cv::aruco;
 
 Detector::Detector(const fs::path& write_path, const float marker_side): write_path_(write_path), marker_side_(marker_side) {}
 
-void Detector::detect(cv::Mat& image) const {
+void Detector::detect(cv::Mat& image, const Eigen::Matrix3d& intrinsics) const {
     auto width = image.cols;
     auto height = image.rows;
-
-    const double fx = 800.0;
-    const double fy = 800.0;
-    const double cx = width  / 2.0;
-    const double cy = height / 2.0;
-
-    cv::Mat camera_matrix = (
-        cv::Mat_<double>(3, 3) << fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0
-    );
 
     aruco::Dictionary dictionary = aruco::getPredefinedDictionary(aruco::DICT_5X5_250);
 
@@ -53,13 +45,17 @@ void Detector::detect(cv::Mat& image) const {
         cv::Point3f(-marker_side_ / 2.0f, -marker_side_ / 2.0f, 0.0f)
     };
 
+    cv::Mat intrinsics_mat;
+
+    cv::eigen2cv(intrinsics, intrinsics_mat);
+
     for (size_t i = 0; i < ids.size(); ++i) {
         cv::Vec3d rvec, tvec;
 
         bool ok = cv::solvePnP(
             corners_3D,
             corners[i],
-            camera_matrix,
+            intrinsics_mat,
             cv::Mat(),
             rvec,
             tvec,
@@ -77,7 +73,7 @@ void Detector::detect(cv::Mat& image) const {
             corners_3D,
             rvec,
             tvec,
-            camera_matrix,
+            intrinsics_mat,
             cv::Mat(),
             projections
         );
