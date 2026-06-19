@@ -4,7 +4,7 @@
             "name": "MSVC Debug",
             "includePath": [
                 "C:/DASI/Code/vcpkg/installed/x64-windows/include",
-                "${workspaceFolder}/**" 
+                "${workspaceFolder}/**"
             ],
             "defines": [
                 "_DEBUG",

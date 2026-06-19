@@ -1,21 +1,25 @@
-# include <map>
-# include <filesystem>
-# include <vector>
-# include <deque>
-# include <Eigen/Dense>
+# include "detector.hpp"
+
 # include <Eigen/Core>
-# include <opencv2/opencv.hpp>
+# include <Eigen/Dense>
+# include <deque>
+# include <filesystem>
+# include <map>
 # include <opencv2/calib3d.hpp>
 # include <opencv2/core/eigen.hpp>
 # include <opencv2/objdetect/aruco_detector.hpp>
-
-# include "detector.hpp"
+# include <opencv2/opencv.hpp>
+# include <vector>
 
 using namespace cv;
 namespace fs = std::filesystem;
 namespace aruco = cv::aruco;
 
-Detector::Detector(const fs::path& write_path, const float marker_side): write_path_(write_path), marker_side_(marker_side) {}
+Detector::Detector(const fs::path& write_path, const float marker_side) : write_path_(write_path), marker_side_(marker_side) {
+    if (fs::exists(write_path_)) return;
+
+    fs::create_directories(write_path_);
+}
 
 void Detector::detect(cv::Mat& image, const Eigen::Matrix3d& intrinsics) const {
     auto width = image.cols;
@@ -49,38 +53,29 @@ void Detector::detect(cv::Mat& image, const Eigen::Matrix3d& intrinsics) const {
 
     cv::eigen2cv(intrinsics, intrinsics_mat);
 
+    auto dest = image.clone();
+
     for (size_t i = 0; i < ids.size(); ++i) {
         cv::Vec3d rvec, tvec;
 
-        bool ok = cv::solvePnP(
-            corners_3D,
-            corners[i],
-            intrinsics_mat,
-            cv::Mat(),
-            rvec,
-            tvec,
-            false,
-            cv::SOLVEPNP_IPPE_SQUARE
-        );
+        bool ok = cv::solvePnP(corners_3D, corners[i], intrinsics_mat, cv::Mat(), rvec, tvec, false, cv::SOLVEPNP_IPPE_SQUARE);
 
         if (!ok) {
-            std::cout << "Marker ID " << ids[i] << " solvePnP failed.\n";
+            std::cout << "solvePnP() incurs failure for Marker [" << ids[i] << "]." << std::endl;
             continue;
         }
 
         std::vector<cv::Point2f> projections;
-        cv::projectPoints(
-            corners_3D,
-            rvec,
-            tvec,
-            intrinsics_mat,
-            cv::Mat(),
-            projections
-        );
+        cv::projectPoints(corners_3D, rvec, tvec, intrinsics_mat, cv::Mat(), projections);
 
         double sum = 0.0;
         for (size_t j = 0; j < corners[i].size(); ++j) {
             sum += cv::norm(corners[i][j] - projections[j]);
+
+            cv::circle(dest, corners[i][j], 3, cv::Scalar(0, 255, 0), -1);
+            cv::circle(dest, projections[j], 3, cv::Scalar(255, 0, 0), -1);
+
+            cv::line(dest, corners[i][j], projections[j], cv::Scalar(255, 255, 0), 1);
         }
 
         double mean_reprojection_error = sum / corners[i].size();
@@ -90,4 +85,6 @@ void Detector::detect(cv::Mat& image, const Eigen::Matrix3d& intrinsics) const {
         std::cout << "=> tvec = [" << tvec.t() << "]" << std::endl;
         std::cout << "=> mean reprojection error = " << mean_reprojection_error << " pixels." << std::endl;
     }
+
+    cv::imwrite((write_path_ / "corner_projections.png").string(), dest);
 }
